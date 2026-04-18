@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>☕ 咖啡订购系统 - 设计模式实验</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <!-- 引入 Element Plus 样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .form-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .result-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .order-info {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .order-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .order-info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .order-info-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .order-info-value {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .price-highlight {
+            color: #f56c6c;
+            font-size: 18px;
+        }
+        
+        .design-pattern-note {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .design-pattern-note strong {
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 页面标题 -->
+            <div class="header">
+                <h1>☕ 咖啡订购系统</h1>
+                <p>设计模式实验 - 工厂模式 + 策略模式</p>
+            </div>
+            
+            <!-- 主卡片 -->
+            <div class="card">
+                <el-form :model="form" label-position="top">
+                    <!-- 选择咖啡类型 -->
+                    <div class="form-section">
+                        <label>📋 选择咖啡类型</label>
+                        <el-select 
+                            v-model="form.coffeeType" 
+                            placeholder="请选择咖啡类型"
+                            style="width: 100%"
+                            size="large"
+                        >
+                            <el-option label="美式咖啡 (Americano)" value="AMERICANO"></el-option>
+                            <el-option label="拿铁咖啡 (Latte)" value="LATTE"></el-option>
+                            <el-option label="卡布奇诺 (Cappuccino)" value="CAPPUCCINO"></el-option>
+                        </el-select>
+                    </div>
+                    
+                    <!-- 选择尺寸 -->
+                    <div class="form-section">
+                        <label>📏 选择尺寸</label>
+                        <el-radio-group v-model="form.size" size="large">
+                            <el-radio-button label="SMALL">小杯</el-radio-button>
+                            <el-radio-button label="MEDIUM">中杯</el-radio-button>
+                            <el-radio-button label="LARGE">大杯</el-radio-button>
+                        </el-radio-group>
+                    </div>
+                    
+                    <!-- 选择支付方式 -->
+                    <div class="form-section">
+                        <label>💳 选择支付方式</label>
+                        <el-radio-group v-model="form.paymentType" size="large">
+                            <el-radio-button label="WECHAT">微信支付</el-radio-button>
+                            <el-radio-button label="ALIPAY">支付宝</el-radio-button>
+                        </el-radio-group>
+                    </div>
+                    
+                    <!-- 提交按钮 -->
+                    <el-button 
+                        type="primary" 
+                        size="large"
+                        class="submit-btn"
+                        @click="submitOrder"
+                        :loading="loading"
+                    >
+                        {{ loading ? '处理中...' : '下单支付' }}
+                    </el-button>
+                </el-form>
+                
+                <!-- 订单结果展示 -->
+                <div v-if="orderResult" class="result-section">
+                    <el-alert
+                        :title="orderResult.success ? '✅ 订单创建成功！' : '❌ 订单创建失败'"
+                        :type="orderResult.success ? 'success' : 'error'"
+                        :description="orderResult.message"
+                        show-icon
+                        :closable="false"
+                    />
+                    
+                    <!-- 订单详情 -->
+                    <div v-if="orderResult.success && orderResult.data" class="order-info">
+                        <div class="order-info-item">
+                            <span class="order-info-label">订单编号：</span>
+                            <span class="order-info-value">{{ orderResult.data.orderId }}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <span class="order-info-label">咖啡名称：</span>
+                            <span class="order-info-value">{{ orderResult.data.coffeeName }}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <span class="order-info-label">尺寸：</span>
+                            <span class="order-info-value">{{ getSizeText(orderResult.data.size) }}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <span class="order-info-label">支付方式：</span>
+                            <span class="order-info-value">{{ getPaymentText(orderResult.data.paymentType) }}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <span class="order-info-label">订单状态：</span>
+                            <span class="order-info-value" style="color: #67c23a;">{{ orderResult.data.status === 'PAID' ? '已支付' : orderResult.data.status }}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <span class="order-info-label">支付金额：</span>
+                            <span class="order-info-value price-highlight">¥{{ orderResult.data.totalAmount.toFixed(2) }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 设计模式说明 -->
+                <div class="design-pattern-note">
+                    <strong>📚 本系统使用的设计模式：</strong><br>
+                    • <strong>工厂模式</strong>：根据选择的咖啡类型创建对应的咖啡对象<br>
+                    • <strong>策略模式</strong>：根据选择的支付方式执行不同的支付策略
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入 Vue 3 (生产版本) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- 引入 Element Plus -->
+    <script src="https://unpkg.com/element-plus"></script>
+    <!-- 引入 Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    
+    <script>
+        const { createApp } = Vue;
+        const { ElMessage } = ElementPlus;
+        
+        const app = createApp({
+            data() {
+                return {
+                    // 表单数据
+                    form: {
+                        coffeeType: '',
+                        size: 'MEDIUM',
+                        paymentType: 'WECHAT'
+                    },
+                    // 加载状态
+                    loading: false,
+                    // 订单结果
+                    orderResult: null
+                };
+            },
+            
+            methods: {
+                /**
+                 * 提交订单
+                 */
+                async submitOrder() {
+                    // 验证表单
+                    if (!this.form.coffeeType) {
+                        ElMessage.warning('请选择咖啡类型');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.orderResult = null;
+                    
+                    try {
+                        // 调用后端API
+                        const response = await axios.post('/api/order/create', this.form);
+                        
+                        if (response.data.success) {
+                            this.orderResult = response.data;
+                            ElMessage.success('订单创建成功！');
+                        } else {
+                            this.orderResult = response.data;
+                            ElMessage.error(response.data.message || '订单创建失败');
+                        }
+                    } catch (error) {
+                        console.error('请求失败:', error);
+                        this.orderResult = {
+                            success: false,
+                            message: '网络错误，请稍后重试'
+                        };
+                        ElMessage.error('网络错误，请稍后重试');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                /**
+                 * 获取尺寸文本
+                 */
+                getSizeText(size) {
+                    const sizeMap = {
+                        'SMALL': '小杯',
+                        'MEDIUM': '中杯',
+                        'LARGE': '大杯'
+                    };
+                    return sizeMap[size] || size;
+                },
+                
+                /**
+                 * 获取支付方式文本
+                 */
+                getPaymentText(paymentType) {
+                    const paymentMap = {
+                        'WECHAT': '微信支付',
+                        'ALIPAY': '支付宝'
+                    };
+                    return paymentMap[paymentType] || paymentType;
+                }
+            }
+        });
+        
+        app.use(ElementPlus);
+        app.mount('#app');
+    </script>
+</body>
+</html>
