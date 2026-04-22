@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☕ 咖啡订购系统 - 设计模式实验</title>
+    <title>☕ 咖啡订购系统 - 设计模式实验 -632307060623-谢云轩-计科2304班</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -126,15 +126,31 @@
         .design-pattern-note strong {
             color: #1890ff;
         }
+
+        .student-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: right;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
+    <!-- 学生信息 -->
+    <div class="student-info">
+        632307060623<br>谢云轩<br>计科2304
+    </div>
     <div id="app">
         <div class="container">
             <!-- 页面标题 -->
             <div class="header">
                 <h1>☕ 咖啡订购系统</h1>
                 <p>设计模式实验 - 工厂模式 + 策略模式</p>
+
             </div>
             
             <!-- 主卡片 -->
@@ -230,6 +246,7 @@
                     <strong>📚 本系统使用的设计模式：</strong><br>
                     • <strong>工厂模式</strong>：根据选择的咖啡类型创建对应的咖啡对象<br>
                     • <strong>策略模式</strong>：根据选择的支付方式执行不同的支付策略
+
                 </div>
             </div>
         </div>
